@@ -20,7 +20,17 @@ class AppDatabase {
       databaseFactory = databaseFactoryFfi;
     }
     final path = join(await getDatabasesPath(), 'dljb.db');
-    return openDatabase(path, version: 1, onCreate: _onCreate);
+    return openDatabase(
+      path,
+      version: 2,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+      onOpen: (db) => SettingsDb.ensureTable(db),
+    );
+  }
+
+  static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    await SettingsDb.ensureTable(db);
   }
 
   static Future<void> _onCreate(Database db, int version) async {
@@ -54,8 +64,16 @@ class AppDatabase {
     return SettingsDb.loadRates(await db);
   }
 
+  static Future<Map<String, String>> getDefaultStrings() async {
+    return SettingsDb.loadStrings(await db);
+  }
+
   static Future<void> saveRate(String key, double value) async {
     await SettingsDb.saveRate(await db, key, value);
+  }
+
+  static Future<void> saveSetting(String key, String value) async {
+    await SettingsDb.saveValue(await db, key, value);
   }
 
   // --- Sales Header CRUD ---
@@ -83,6 +101,12 @@ class AppDatabase {
     final d = await db;
     final rows = await d.query('sales_hdr', orderBy: 'id DESC');
     return rows.map(SalesHdr.fromMap).toList();
+  }
+
+  static Future<List<int>> getAllHdrIds() async {
+    final d = await db;
+    final rows = await d.query('sales_hdr', columns: ['id'], orderBy: 'id DESC');
+    return rows.map((r) => r['id'] as int).toList();
   }
 
   static Future<SalesHdr?> getHdr(int id) async {

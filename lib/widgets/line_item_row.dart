@@ -29,13 +29,13 @@ class _LineItemRowState extends State<LineItemRow> {
     _prod  = TextEditingController(text: l.prod);
     _hsn   = TextEditingController(text: l.hsn);
     _uom   = TextEditingController(text: l.uom);
-    _qty   = TextEditingController(text: l.qty   == 0 ? '' : l.qty.toString());
-    _rate  = TextEditingController(text: l.rate  == 0 ? '' : l.rate.toString());
-    _dis   = TextEditingController(text: l.dis   == 0 ? '' : l.dis.toString());
-    _cgstR = TextEditingController(text: l.cgstR.toString());
-    _sgstR = TextEditingController(text: l.sgstR.toString());
-    _igstR = TextEditingController(text: l.igstR.toString());
-    _cessR = TextEditingController(text: l.cessR.toString());
+    _qty   = TextEditingController(text: l.qty   == 0 ? '' : l.qty.toStringAsFixed(0));
+    _rate  = TextEditingController(text: l.rate  == 0 ? '' : l.rate.toStringAsFixed(2));
+    _dis   = TextEditingController(text: l.dis   == 0 ? '' : l.dis.toStringAsFixed(2));
+    _cgstR = TextEditingController(text: l.cgstR.toStringAsFixed(2));
+    _sgstR = TextEditingController(text: l.sgstR.toStringAsFixed(2));
+    _igstR = TextEditingController(text: l.igstR.toStringAsFixed(2));
+    _cessR = TextEditingController(text: l.cessR.toStringAsFixed(2));
 
     for (final c in [_qty, _rate, _dis, _cgstR, _sgstR, _igstR, _cessR]) {
       c.addListener(_recalc);
@@ -45,17 +45,17 @@ class _LineItemRowState extends State<LineItemRow> {
     _uom.addListener(_notifyText);
   }
 
-  void _notifyText() => _notify(_buildLine());
+  void _notifyText() => widget.onChanged(_buildLine());
 
   void _recalc() {
-    final ln = _buildLine();
-    final amt    = ln.qty * ln.rate;
-    final cgstA  = amt * ln.cgstR / 100;
-    final sgstA  = amt * ln.sgstR / 100;
-    final igstA  = amt * ln.igstR / 100;
-    final cessA  = amt * ln.cessR / 100;
-    final total  = amt + cgstA + sgstA + igstA + cessA - ln.dis;
-    _notify(ln.copyWith(
+    final ln    = _buildLine();
+    final amt   = ln.qty * ln.rate;
+    final cgstA = amt * ln.cgstR / 100;
+    final sgstA = amt * ln.sgstR / 100;
+    final igstA = amt * ln.igstR / 100;
+    final cessA = amt * ln.cessR / 100;
+    final total = amt + cgstA + sgstA + igstA + cessA - ln.dis;
+    widget.onChanged(ln.copyWith(
       amt: amt, cgstA: cgstA, sgstA: sgstA,
       igstA: igstA, cessA: cessA, total: total,
     ));
@@ -74,115 +74,81 @@ class _LineItemRowState extends State<LineItemRow> {
         cessR: double.tryParse(_cessR.text) ?? 0,
       );
 
-  void _notify(SalesLn ln) => widget.onChanged(ln);
-
-  Widget _f(String label, TextEditingController ctrl, {TextInputType? type, int flex = 1}) =>
-      Expanded(
-        flex: flex,
+  // fixed-width cell — no Expanded, pure fixed SizedBox
+  Widget _cell(TextEditingController ctrl, double w, {TextInputType? type}) => SizedBox(
+        width: w,
         child: Padding(
-          padding: const EdgeInsets.only(right: 8, bottom: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 3),
           child: TextField(
             controller: ctrl,
             keyboardType: type,
-            decoration: InputDecoration(
-              labelText: label,
-              border: const OutlineInputBorder(),
+            style: const TextStyle(fontSize: 11),
+            decoration: const InputDecoration(
+              filled: true,
+              fillColor: Color(0xFFFAFAFA),
+              border: OutlineInputBorder(borderSide: BorderSide(color: Color(0xFFCCCCCC))),
               isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 5),
             ),
           ),
         ),
       );
 
-  Widget _rateAmtPair(String rateLabel, TextEditingController rateCtrl, double amount) =>
-      Expanded(
+  Widget _readCell(String val, double w, {bool bold = false}) => SizedBox(
+        width: w,
         child: Padding(
-          padding: const EdgeInsets.only(right: 8, bottom: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: rateCtrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(
-                  labelText: rateLabel,
-                  suffixText: '%',
-                  border: const OutlineInputBorder(),
-                  isDense: true,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Padding(
-                padding: const EdgeInsets.only(left: 4),
-                child: Text(
-                  '₹${amount.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ),
-            ],
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Text(val,
+              style: TextStyle(fontSize: 11, fontWeight: bold ? FontWeight.bold : FontWeight.normal),
+              textAlign: TextAlign.right),
         ),
       );
 
   @override
   Widget build(BuildContext context) {
-    final l = widget.line;
+    final l   = widget.line;
     final num = const TextInputType.numberWithOptions(decimal: true);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header row
-            Row(children: [
-              Text('Item ${widget.index + 1}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1565C0))),
-              const Spacer(),
-              if (widget.onRemove != null)
-                IconButton(
-                  icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
-                  onPressed: widget.onRemove,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-            ]),
-            const SizedBox(height: 8),
-
-            // Product & HSN
-            Row(children: [_f('Product / Description', _prod, flex: 2), _f('HSN Code', _hsn)]),
-
-            // UOM, Qty, Rate
-            Row(children: [_f('UOM', _uom), _f('Qty', _qty, type: num), _f('Rate (₹)', _rate, type: num)]),
-
-            // Discount
-            Row(children: [_f('Discount (₹)', _dis, type: num), const Expanded(child: SizedBox()), const Expanded(child: SizedBox())]),
-
-            // Tax rates with auto-calculated amounts shown below each
-            const Text('Tax Rates  (editable per item)',
-                style: TextStyle(fontSize: 12, color: Colors.grey)),
-            const SizedBox(height: 6),
-            Row(children: [
-              _rateAmtPair('CGST %', _cgstR, l.cgstA),
-              _rateAmtPair('SGST %', _sgstR, l.sgstA),
-              _rateAmtPair('IGST %', _igstR, l.igstA),
-              _rateAmtPair('CESS %', _cessR, l.cessA),
-            ]),
-
-            // Line total summary
-            const Divider(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Taxable: ₹${l.amt.toStringAsFixed(2)}',
-                    style: const TextStyle(fontSize: 13, color: Colors.grey)),
-                Text('Line Total: ₹${l.total.toStringAsFixed(2)}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-              ],
+    return Container(
+      decoration: BoxDecoration(
+        color: widget.index.isEven ? const Color(0xFFF5F8FF) : Colors.white,
+        border: const Border(bottom: BorderSide(color: Color(0xFFDDDDDD))),
+      ),
+      child: Row(
+        children: [
+          // Sl No
+          SizedBox(
+            width: 40,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text('${widget.index + 1}', style: const TextStyle(fontSize: 11), textAlign: TextAlign.center),
             ),
-          ],
-        ),
+          ),
+          _cell(_prod, 180),
+          _cell(_hsn,  80),
+          _cell(_uom,  60),
+          _cell(_qty,  60, type: num),
+          _cell(_rate, 80, type: num),
+          _readCell(l.amt.toStringAsFixed(2),   90),
+          _cell(_dis,  80, type: num),
+          _readCell(l.amt.toStringAsFixed(2),  100),   // taxable = amt
+          _cell(_cgstR, 80, type: num),
+          _readCell(l.cgstA.toStringAsFixed(2), 80),
+          _cell(_sgstR, 80, type: num),
+          _readCell(l.sgstA.toStringAsFixed(2), 80),
+          _cell(_igstR, 80, type: num),
+          _readCell(l.igstA.toStringAsFixed(2), 80),
+          _cell(_cessR, 80, type: num),
+          _readCell(l.cessA.toStringAsFixed(2), 80),
+          _readCell(l.total.toStringAsFixed(2), 90, bold: true),
+          if (widget.onRemove != null)
+            IconButton(
+              icon: const Icon(Icons.remove_circle_outline, color: Colors.red, size: 16),
+              onPressed: widget.onRemove,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+            ),
+        ],
       ),
     );
   }

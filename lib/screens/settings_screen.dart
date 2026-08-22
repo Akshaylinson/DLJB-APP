@@ -4,18 +4,19 @@ import '../db/settings_db.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
-
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final _cgstR = TextEditingController();
-  final _sgstR = TextEditingController();
-  final _igstR = TextEditingController();
-  final _cessR = TextEditingController();
+  final _cgstR  = TextEditingController();
+  final _sgstR  = TextEditingController();
+  final _igstR  = TextEditingController();
+  final _cessR  = TextEditingController();
+  final _bankDet = TextEditingController();
+  final _termc   = TextEditingController();
   bool _loading = true;
-  bool _saving = false;
+  bool _saving  = false;
 
   @override
   void initState() {
@@ -24,11 +25,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _load() async {
-    final rates = await AppDatabase.getDefaultRates();
-    _cgstR.text = (rates[SettingsDb.keyCgstR] ?? 9.0).toString();
-    _sgstR.text = (rates[SettingsDb.keySgstR] ?? 9.0).toString();
-    _igstR.text = (rates[SettingsDb.keyIgstR] ?? 0.0).toString();
-    _cessR.text = (rates[SettingsDb.keyCessR] ?? 0.0).toString();
+    final rates   = await AppDatabase.getDefaultRates();
+    final strings = await AppDatabase.getDefaultStrings();
+    _cgstR.text   = (rates[SettingsDb.keyCgstR]  ?? 9.0).toString();
+    _sgstR.text   = (rates[SettingsDb.keySgstR]  ?? 9.0).toString();
+    _igstR.text   = (rates[SettingsDb.keyIgstR]  ?? 0.0).toString();
+    _cessR.text   = (rates[SettingsDb.keyCessR]  ?? 0.0).toString();
+    _bankDet.text = strings[SettingsDb.keyBankDet] ?? '';
+    _termc.text   = strings[SettingsDb.keyTermsc]  ?? '';
     setState(() => _loading = false);
   }
 
@@ -38,35 +42,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await AppDatabase.saveRate(SettingsDb.keySgstR, double.tryParse(_sgstR.text) ?? 0);
     await AppDatabase.saveRate(SettingsDb.keyIgstR, double.tryParse(_igstR.text) ?? 0);
     await AppDatabase.saveRate(SettingsDb.keyCessR, double.tryParse(_cessR.text) ?? 0);
+    await AppDatabase.saveSetting(SettingsDb.keyBankDet, _bankDet.text.trim());
+    await AppDatabase.saveSetting(SettingsDb.keyTermsc,  _termc.text.trim());
     setState(() => _saving = false);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Default tax rates saved'), backgroundColor: Colors.green),
+        const SnackBar(content: Text('Settings saved'), backgroundColor: Colors.green),
       );
     }
   }
 
-  Widget _rateField(String label, TextEditingController ctrl, String hint) => Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: TextFormField(
-          controller: ctrl,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(
-            labelText: label,
-            hintText: hint,
-            suffixText: '%',
-            border: const OutlineInputBorder(),
-            helperText: 'Applied by default to all new line items',
-          ),
-        ),
-      );
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF0F0F0),
       appBar: AppBar(
-        title: const Text('Tax Rate Settings'),
-        backgroundColor: const Color(0xFF1565C0),
+        title: const Text('Settings'),
+        backgroundColor: const Color(0xFF2B2B2B),
         foregroundColor: Colors.white,
         actions: [
           if (_saving)
@@ -81,55 +73,90 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _sectionHeader('Default Tax Rates'),
+                  const SizedBox(height: 4),
                   const Text(
-                    'Default Tax Rates',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1565C0)),
+                    'Pre-filled on every new line item. Can be overridden per item.',
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 12),
+                  Row(children: [
+                    _rateField('CGST %', _cgstR),
+                    const SizedBox(width: 12),
+                    _rateField('SGST %', _sgstR),
+                    const SizedBox(width: 12),
+                    _rateField('IGST %', _igstR),
+                    const SizedBox(width: 12),
+                    _rateField('CESS %', _cessR),
+                  ]),
+                  const SizedBox(height: 20),
+                  _sectionHeader('Bank Details'),
+                  const SizedBox(height: 4),
                   const Text(
-                    'These rates are pre-filled when you add a new line item. You can still override them per item on the invoice.',
-                    style: TextStyle(color: Colors.grey, fontSize: 13),
+                    'Auto-filled on every new invoice. Editable per invoice if needed.',
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
                   ),
-                  const SizedBox(height: 24),
-                  _rateField('CGST Rate', _cgstR, 'e.g. 9'),
-                  _rateField('SGST Rate', _sgstR, 'e.g. 9'),
-                  _rateField('IGST Rate', _igstR, 'e.g. 0 (for intra-state, keep 0)'),
-                  _rateField('CESS Rate', _cessR, 'e.g. 0'),
-                  const Divider(height: 32),
+                  const SizedBox(height: 12),
+                  _textArea(_bankDet, 5),
+                  const SizedBox(height: 20),
+                  _sectionHeader('Terms & Conditions'),
+                  const SizedBox(height: 4),
                   const Text(
-                    'How it works',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    'Auto-filled on every new invoice. Editable per invoice if needed.',
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
                   ),
-                  const SizedBox(height: 8),
-                  _infoRow('AMT', 'QTY × RATE'),
-                  _infoRow('CGST Amount', 'AMT × CGST Rate / 100'),
-                  _infoRow('SGST Amount', 'AMT × SGST Rate / 100'),
-                  _infoRow('IGST Amount', 'AMT × IGST Rate / 100'),
-                  _infoRow('CESS Amount', 'AMT × CESS Rate / 100'),
-                  _infoRow('Line Total', 'AMT + CGST + SGST + IGST + CESS − Discount'),
+                  const SizedBox(height: 12),
+                  _textArea(_termc, 6),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
     );
   }
 
-  Widget _infoRow(String label, String formula) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 3),
-        child: Row(
-          children: [
-            SizedBox(width: 120, child: Text(label, style: const TextStyle(fontWeight: FontWeight.w500))),
-            Text('= $formula', style: const TextStyle(color: Colors.grey)),
-          ],
+  Widget _sectionHeader(String title) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: const BoxDecoration(
+          color: Color(0xFF2B2B2B),
+          borderRadius: BorderRadius.all(Radius.circular(4)),
+        ),
+        child: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+      );
+
+  Widget _rateField(String label, TextEditingController ctrl) => Expanded(
+        child: TextField(
+          controller: ctrl,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(
+            labelText: label,
+            suffixText: '%',
+            filled: true,
+            fillColor: Colors.white,
+            border: const OutlineInputBorder(),
+            isDense: true,
+          ),
+        ),
+      );
+
+  Widget _textArea(TextEditingController ctrl, int lines) => TextField(
+        controller: ctrl,
+        maxLines: lines,
+        decoration: const InputDecoration(
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(),
+          isDense: true,
         ),
       );
 
   @override
   void dispose() {
-    for (final c in [_cgstR, _sgstR, _igstR, _cessR]) {
+    for (final c in [_cgstR, _sgstR, _igstR, _cessR, _bankDet, _termc]) {
       c.dispose();
     }
     super.dispose();
