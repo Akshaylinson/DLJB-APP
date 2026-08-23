@@ -380,7 +380,7 @@ class InvoicePdf {
       pw.Expanded(
         flex: 3,
         child: pw.Container(
-          height: 136,
+          height: 154,
           decoration: pw.BoxDecoration(
             border: pw.Border.all(color: _kBorder, width: 0.6),
             borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
@@ -395,14 +395,14 @@ class InvoicePdf {
             pw.Container(height: 0.5, color: _kBorder),
             pw.Expanded(
               child: pw.Padding(
-                padding: const pw.EdgeInsets.fromLTRB(8, 4, 8, 6),
+                padding: const pw.EdgeInsets.fromLTRB(8, 4, 8, 8),
                 child: pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   mainAxisAlignment: pw.MainAxisAlignment.end,
                   children: [
                     pw.Text('(Common Seal)',
                         style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey600)),
-                    pw.SizedBox(height: 24),
+                    pw.SizedBox(height: 42),
                   ],
                 ),
               ),
@@ -414,7 +414,7 @@ class InvoicePdf {
       pw.Expanded(
         flex: 2,
         child: pw.Container(
-          height: 136,
+          height: 154,
           decoration: pw.BoxDecoration(
             border: pw.Border.all(color: _kBorder, width: 0.6),
             borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
@@ -442,17 +442,11 @@ class InvoicePdf {
             pw.Text('FOR $company',
                 style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: _kBlue),
                 textAlign: pw.TextAlign.center),
-            pw.Spacer(),
-            pw.Container(
-              margin: const pw.EdgeInsets.symmetric(horizontal: 28),
-              height: 0.6,
-              color: _kBlue,
-            ),
-            pw.SizedBox(height: 3),
+            pw.SizedBox(height: 24),
             pw.Text('Authorised Signatory',
                 style: const pw.TextStyle(fontSize: 7),
                 textAlign: pw.TextAlign.center),
-            pw.SizedBox(height: 4),
+            pw.SizedBox(height: 6),
           ]),
         ),
       ),
