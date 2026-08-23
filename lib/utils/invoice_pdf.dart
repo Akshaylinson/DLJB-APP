@@ -380,7 +380,7 @@ class InvoicePdf {
       pw.Expanded(
         flex: 3,
         child: pw.Container(
-          height: 154,
+          height: 168,
           decoration: pw.BoxDecoration(
             border: pw.Border.all(color: _kBorder, width: 0.6),
             borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
@@ -402,7 +402,7 @@ class InvoicePdf {
                   children: [
                     pw.Text('(Common Seal)',
                         style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey600)),
-                    pw.SizedBox(height: 42),
+                    pw.SizedBox(height: 52),
                   ],
                 ),
               ),
@@ -414,7 +414,7 @@ class InvoicePdf {
       pw.Expanded(
         flex: 2,
         child: pw.Container(
-          height: 154,
+          height: 168,
           decoration: pw.BoxDecoration(
             border: pw.Border.all(color: _kBorder, width: 0.6),
             borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
@@ -442,11 +442,11 @@ class InvoicePdf {
             pw.Text('FOR $company',
                 style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: _kBlue),
                 textAlign: pw.TextAlign.center),
-            pw.SizedBox(height: 24),
+            pw.SizedBox(height: 30),
             pw.Text('Authorised Signatory',
                 style: const pw.TextStyle(fontSize: 7),
                 textAlign: pw.TextAlign.center),
-            pw.SizedBox(height: 6),
+            pw.SizedBox(height: 8),
           ]),
         ),
       ),
