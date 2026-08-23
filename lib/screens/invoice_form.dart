@@ -217,21 +217,39 @@ class _InvoiceFormState extends State<InvoiceForm> {
   }
 
   Future<void> _printPreview() async {
-    final hdr = _currentHdr();
-    final doc = await InvoicePdf.build(hdr, _lines);
-    await Printing.layoutPdf(onLayout: (_) async => doc.save());
+    try {
+      final hdr = _currentHdr();
+      final doc = await InvoicePdf.build(hdr, _lines);
+      final bytes = await doc.save();
+      await Printing.layoutPdf(onLayout: (_) async => bytes);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Preview error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   Future<void> _printDirect() async {
-    final hdr = _currentHdr();
-    final doc = await InvoicePdf.build(hdr, _lines);
-    if (!mounted) return;
-    final printer = await Printing.pickPrinter(context: context);
-    if (printer == null) return;
-    await Printing.directPrintPdf(
-      printer: printer,
-      onLayout: (_) async => doc.save(),
-    );
+    try {
+      final hdr = _currentHdr();
+      final doc = await InvoicePdf.build(hdr, _lines);
+      final bytes = await doc.save();
+      if (!mounted) return;
+      final printer = await Printing.pickPrinter(context: context);
+      if (printer == null) return;
+      await Printing.directPrintPdf(
+        printer: printer,
+        onLayout: (_) async => bytes,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Print error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   SalesHdr _currentHdr() => SalesHdr(
