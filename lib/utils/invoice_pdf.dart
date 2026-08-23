@@ -41,6 +41,8 @@ class InvoicePdf {
         _bottom(hdr, lines, companyName),
         pw.SizedBox(height: 6),
         _footer(),
+        pw.SizedBox(height: 2),
+        pw.Container(height: 0.7, color: _kBlue),
       ]);
 
   // ── 1. Header ─────────────────────────────────────────────────────────────
@@ -246,20 +248,20 @@ class InvoicePdf {
       ('Name of Product\n/ Service',118.0, false),
       ('HSN\nACS',                  32.0,  false),
       ('UOM',                       24.0,  false),
-      ('Qty',                       24.0,  true),
-      ('Rate',                      40.0,  true),
-      ('Amount',                    44.0,  true),
-      ('Less\nDisc.',               32.0,  true),
-      ('Taxable\nValue',            44.0,  true),
-      ('CGST\nRate%',               30.0,  true),
-      ('CGST\nAmt',                 34.0,  true),
-      ('SGST\nRate%',               30.0,  true),
-      ('SGST\nAmt',                 34.0,  true),
-      ('IGST\nRate%',               30.0,  true),
-      ('IGST\nAmt',                 34.0,  true),
-      ('CESS\nRate%',               30.0,  true),
-      ('CESS\nAmt',                 34.0,  true),
-      ('Total',                     44.0,  true),
+      ('Qty',                       26.0,  true),
+      ('Rate',                      42.0,  true),
+      ('Amount',                    46.0,  true),
+      ('Less\nDisc.',               34.0,  true),
+      ('Taxable\nValue',            46.0,  true),
+      ('CGST\nRate%',               31.0,  true),
+      ('CGST\nAmt',                 35.0,  true),
+      ('SGST\nRate%',               31.0,  true),
+      ('SGST\nAmt',                 35.0,  true),
+      ('IGST\nRate%',               31.0,  true),
+      ('IGST\nAmt',                 35.0,  true),
+      ('CESS\nRate%',               31.0,  true),
+      ('CESS\nAmt',                 35.0,  true),
+      ('Total',                     50.0,  true),
     ];
 
     final totalTableW = cols.fold(0.0, (s, c) => s + c.$2);
@@ -375,77 +377,90 @@ class InvoicePdf {
 
     return pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
       // Left column: words + bank + terms + common seal
-      pw.Expanded(flex: 3, child: pw.Container(
-        decoration: pw.BoxDecoration(
-          border: pw.Border.all(color: _kBorder, width: 0.6),
-          borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
-        ),
-        child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
-          // Amount in words
-          _bottomSection('Total Invoice Amount in Words :',
-              AmountWords.convert(grandTotal)),
-          pw.Container(height: 0.5, color: _kBorder),
-          // Bank details
-          _bottomSection('Bank Details :', hdr.bDet),
-          pw.Container(height: 0.5, color: _kBorder),
-          // Terms
-          _bottomSection('Terms and Conditions :', hdr.termc),
-          pw.Container(height: 0.5, color: _kBorder),
-          // Common seal — tall area for physical stamp
-          pw.Padding(
-            padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Text('(Common Seal)',
-                    style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey600)),
-                pw.SizedBox(height: 24),
-              ],
-            ),
+      pw.Expanded(
+        flex: 3,
+        child: pw.Container(
+          height: 136,
+          decoration: pw.BoxDecoration(
+            border: pw.Border.all(color: _kBorder, width: 0.6),
+            borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
           ),
-        ]),
-      )),
+          child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
+            _bottomSection('Total Invoice Amount in Words :',
+                AmountWords.convert(grandTotal)),
+            pw.Container(height: 0.5, color: _kBorder),
+            _bottomSection('Bank Details :', hdr.bDet),
+            pw.Container(height: 0.5, color: _kBorder),
+            _bottomSection('Terms and Conditions :', hdr.termc),
+            pw.Container(height: 0.5, color: _kBorder),
+            pw.Expanded(
+              child: pw.Padding(
+                padding: const pw.EdgeInsets.fromLTRB(8, 4, 8, 6),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  mainAxisAlignment: pw.MainAxisAlignment.end,
+                  children: [
+                    pw.Text('(Common Seal)',
+                        style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey600)),
+                    pw.SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+          ]),
+        ),
+      ),
       pw.SizedBox(width: 5),
-      // Right column: summary + signatory
-      pw.Expanded(flex: 2, child: pw.Container(
-        decoration: pw.BoxDecoration(
-          border: pw.Border.all(color: _kBorder, width: 0.6),
-          borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
-        ),
-        child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.stretch, children: [
-          _sumRow('Total Amount Before Tax', _n(amtBt)),
-          _sumRow('Add : CGST',              _n(cgst)),
-          _sumRow('Add : SGST',              _n(sgst)),
-          _sumRow('Add : IGST',              _n(igst)),
-          _sumRow('Add : CESS',              _n(cess)),
-          _sumRow('Tax Amount : GST',        _n(taxGst)),
-          pw.Container(height: 1, color: _kBlue),
-          _sumRow('Total Amount After Tax',  _n(grandTotal), bold: true, highlight: true),
-          _sumRow('GST Payable on Reverse charge', _n(hdr.gstRv)),
-          pw.Container(height: 0.5, color: _kBorder),
-          pw.Padding(
-            padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            child: pw.Text(
-              'Certified that the particulars given above are true and correct',
-              style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.grey600),
-              textAlign: pw.TextAlign.center,
-            ),
+      pw.Expanded(
+        flex: 2,
+        child: pw.Container(
+          height: 136,
+          decoration: pw.BoxDecoration(
+            border: pw.Border.all(color: _kBorder, width: 0.6),
+            borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
           ),
-          pw.Text('FOR $company',
-              style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: _kBlue),
-              textAlign: pw.TextAlign.center),
-          pw.SizedBox(height: 10),
-          pw.Text('Authorised Signatory',
-              style: const pw.TextStyle(fontSize: 7),
-              textAlign: pw.TextAlign.center),
-          pw.SizedBox(height: 2),
-        ]),
-      )),
+          child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.stretch, children: [
+            _sumRow('Total Amount Before Tax', _n(amtBt)),
+            _sumRow('Add : CGST',              _n(cgst)),
+            _sumRow('Add : SGST',              _n(sgst)),
+            _sumRow('Add : IGST',              _n(igst)),
+            _sumRow('Add : CESS',              _n(cess)),
+            _sumRow('Tax Amount : GST',        _n(taxGst)),
+            pw.Container(height: 1, color: _kBlue),
+            _sumRow('Total Amount After Tax',  _n(grandTotal), bold: true, highlight: true),
+            _sumRow('GST Payable on Reverse charge', _n(hdr.gstRv)),
+            pw.Container(height: 0.5, color: _kBorder),
+            pw.Padding(
+              padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+              child: pw.Text(
+                'Certified that the particulars given above are true and correct',
+                style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.grey600),
+                textAlign: pw.TextAlign.center,
+              ),
+            ),
+            pw.SizedBox(height: 2),
+            pw.Text('FOR $company',
+                style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: _kBlue),
+                textAlign: pw.TextAlign.center),
+            pw.Spacer(),
+            pw.Container(
+              margin: const pw.EdgeInsets.symmetric(horizontal: 28),
+              height: 0.6,
+              color: _kBlue,
+            ),
+            pw.SizedBox(height: 3),
+            pw.Text('Authorised Signatory',
+                style: const pw.TextStyle(fontSize: 7),
+                textAlign: pw.TextAlign.center),
+            pw.SizedBox(height: 4),
+          ]),
+        ),
+      ),
     ]);
   }
 
   static pw.Widget _bottomSection(String title, String content) => pw.Padding(
-        padding: const pw.EdgeInsets.all(4),
+        padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 3),
         child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
           pw.Text(title,
               style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold, color: _kBlue)),
@@ -478,12 +493,18 @@ class InvoicePdf {
 
   // ── Footer ────────────────────────────────────────────────────────────────
   static pw.Widget _footer() => pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Text('This is a computer generated invoice.',
-              style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.grey500)),
-          pw.Text('E & C',
-              style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.grey500)),
+          pw.Expanded(
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text('This is a computer generated invoice.',
+                    style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.grey500)),
+                pw.Text('E & OE',
+                    style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.grey500)),
+              ],
+            ),
+          ),
         ],
       );
 
