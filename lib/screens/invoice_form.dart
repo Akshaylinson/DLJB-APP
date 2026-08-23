@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:printing/printing.dart';
 import '../db/app_database.dart';
 import '../db/settings_db.dart';
 import '../models/sales_hdr.dart';
 import '../models/sales_ln.dart';
 import '../utils/amount_words.dart';
+import '../utils/invoice_pdf.dart';
 import '../widgets/line_item_row.dart';
 
 // ── colour constants matching the FoxPro theme ──────────────────────────────
@@ -214,6 +216,55 @@ class _InvoiceFormState extends State<InvoiceForm> {
     setState(() => _loading = false);
   }
 
+  Future<void> _printPreview() async {
+    final hdr = _currentHdr();
+    final doc = await InvoicePdf.build(hdr, _lines);
+    await Printing.layoutPdf(onLayout: (_) async => doc.save());
+  }
+
+  Future<void> _printDirect() async {
+    final hdr = _currentHdr();
+    final doc = await InvoicePdf.build(hdr, _lines);
+    if (!mounted) return;
+    final printer = await Printing.pickPrinter(context: context);
+    if (printer == null) return;
+    await Printing.directPrintPdf(
+      printer: printer,
+      onLayout: (_) async => doc.save(),
+    );
+  }
+
+  SalesHdr _currentHdr() => SalesHdr(
+        id: widget.hdrId,
+        invNo: _invNo.text.trim(),
+        invDt: _invDt,
+        revCg: double.tryParse(_revCgC.text) ?? 0,
+        state: _state.text.trim(),
+        staCd: _staCd.text.trim(),
+        traMd: _traMd.text.trim(),
+        vehNo: _vehNo.text.trim(),
+        dtSup: _dtSup,
+        plSup: _plSup.text.trim(),
+        rName: _rName.text.trim(),
+        rAdd:  _rAdd.text.trim(),
+        rGst:  _rGst.text.trim(),
+        rPh:   _rPh.text.trim(),
+        rStat: _rStat.text.trim(),
+        rSCd:  _rSCd.text.trim(),
+        sName: _sName.text.trim(),
+        sAdd:  _sAdd.text.trim(),
+        sGst:  _sGst.text.trim(),
+        sPh:   _sPh.text.trim(),
+        sStat: _sStat.text.trim(),
+        ssCd:  _ssCd.text.trim(),
+        wAmt:  AmountWords.convert(_grandTotal),
+        bDet:  _bDet.text.trim(),
+        termc: _termc.text.trim(),
+        amtBt: _amtBt, cgst: _totalCgst, sgst: _totalSgst,
+        igst: _totalIgst, txgst: _taxGst, taxAt: _grandTotal,
+        gstRv: _gstRv, cess: _totalCess,
+      );
+
   Future<void> _pickDate(bool isInvDt) async {
     final picked = await showDatePicker(
       context: context,
@@ -251,7 +302,7 @@ class _InvoiceFormState extends State<InvoiceForm> {
                     key: _formKey,
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        final w = constraints.maxWidth;
+                        final w = constraints.maxWidth - 20; // subtract padding(10) each side
                         return SingleChildScrollView(
                           padding: const EdgeInsets.all(10),
                           child: SizedBox(
@@ -571,13 +622,18 @@ class _InvoiceFormState extends State<InvoiceForm> {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: Row(
           children: [
-            _navBtn(Icons.first_page, 'First', () => _navigate(0)),
-            _navBtn(Icons.chevron_left, 'Prev', () => _navigate(_currentIndex - 1)),
-            _navBtn(Icons.chevron_right, 'Next', () => _navigate(_currentIndex + 1)),
-            _navBtn(Icons.last_page, 'Last', () => _navigate(_allIds.length - 1)),
-            const SizedBox(width: 8),
-            _navBtn(Icons.add_box_outlined, 'New', _newRecord),
-            _navBtn(Icons.save_outlined, 'Save', _save),
+            _navBtn(Icons.first_page,       'First',    () => _navigate(0)),
+            _navBtn(Icons.chevron_left,     'Prev',     () => _navigate(_currentIndex - 1)),
+            _navBtn(Icons.chevron_right,    'Next',     () => _navigate(_currentIndex + 1)),
+            _navBtn(Icons.last_page,        'Last',     () => _navigate(_allIds.length - 1)),
+            const SizedBox(width: 4),
+            _navBtn(Icons.add_box_outlined, 'New',      _newRecord),
+            _navBtn(Icons.save_outlined,    'Save',     _save),
+            const SizedBox(width: 4),
+            Container(width: 1, height: 36, color: Colors.white24),
+            const SizedBox(width: 4),
+            _navBtn(Icons.preview_outlined,  'Preview', _printPreview),
+            _navBtn(Icons.print_outlined,    'Print',   _printDirect),
             const Spacer(),
             Text(recLabel, style: const TextStyle(color: Colors.white70, fontSize: 12)),
             const SizedBox(width: 8),
