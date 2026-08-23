@@ -7,6 +7,7 @@ import '../models/sales_hdr.dart';
 import '../models/sales_ln.dart';
 import '../utils/amount_words.dart';
 import '../utils/invoice_pdf.dart';
+import 'invoice_preview_screen.dart';
 import '../widgets/line_item_row.dart';
 
 // ── colour constants matching the FoxPro theme ──────────────────────────────
@@ -230,10 +231,15 @@ class _InvoiceFormState extends State<InvoiceForm> {
 
   Future<void> _printPreview() async {
     try {
-      final hdr = _currentHdr();
-      final doc = await InvoicePdf.build(hdr, _lines);
-      final bytes = await doc.save();
-      await Printing.layoutPdf(onLayout: (_) async => bytes);
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => InvoicePreviewScreen(
+            hdr: _currentHdr(),
+            lines: List<SalesLn>.from(_lines),
+          ),
+        ),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -248,13 +254,7 @@ class _InvoiceFormState extends State<InvoiceForm> {
       final hdr = _currentHdr();
       final doc = await InvoicePdf.build(hdr, _lines);
       final bytes = await doc.save();
-      if (!mounted) return;
-      final printer = await Printing.pickPrinter(context: context);
-      if (printer == null) return;
-      await Printing.directPrintPdf(
-        printer: printer,
-        onLayout: (_) async => bytes,
-      );
+      await Printing.layoutPdf(onLayout: (_) async => bytes);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
