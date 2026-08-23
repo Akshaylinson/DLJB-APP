@@ -1,5 +1,7 @@
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import '../db/app_database.dart';
+import '../db/settings_db.dart';
 import '../models/sales_hdr.dart';
 import '../models/sales_ln.dart';
 import '../utils/amount_words.dart';
@@ -14,17 +16,19 @@ class InvoicePdf {
   static const _minBodyH = 110.0; // constant table body height
 
   static Future<pw.Document> build(SalesHdr hdr, List<SalesLn> lines) async {
+    final strings = await AppDatabase.getDefaultStrings();
+    final companyName = (strings[SettingsDb.keyCoName] ?? '').trim();
     final doc = pw.Document();
     doc.addPage(pw.Page(
       pageFormat: PdfPageFormat.a4.landscape,
       margin: const pw.EdgeInsets.symmetric(horizontal: 24, vertical: 18),
-      build: (_) => _page(hdr, lines),
+      build: (_) => _page(hdr, lines, companyName),
     ));
     return doc;
   }
 
   // ── Page ──────────────────────────────────────────────────────────────────
-  static pw.Widget _page(SalesHdr hdr, List<SalesLn> lines) =>
+  static pw.Widget _page(SalesHdr hdr, List<SalesLn> lines, String companyName) =>
       pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.stretch, children: [
         _header(hdr),
         pw.SizedBox(height: 5),
@@ -34,8 +38,8 @@ class InvoicePdf {
         pw.SizedBox(height: 4),
         _table(lines),
         pw.SizedBox(height: 4),
-        _bottom(hdr, lines),
-        pw.Spacer(),
+        _bottom(hdr, lines, companyName),
+        pw.SizedBox(height: 6),
         _footer(),
       ]);
 
@@ -357,7 +361,7 @@ class InvoicePdf {
   }
 
   // ── 5. Bottom section ─────────────────────────────────────────────────────
-  static pw.Widget _bottom(SalesHdr hdr, List<SalesLn> lines) {
+  static pw.Widget _bottom(SalesHdr hdr, List<SalesLn> lines, String companyName) {
     final grandTotal = lines.fold(0.0, (s, l) => s + l.total);
     final cgst  = lines.fold(0.0, (s, l) => s + l.cgstA);
     final sgst  = lines.fold(0.0, (s, l) => s + l.sgstA);
@@ -365,9 +369,9 @@ class InvoicePdf {
     final cess  = lines.fold(0.0, (s, l) => s + l.cessA);
     final amtBt = lines.fold(0.0, (s, l) => s + l.amt);
     final taxGst = cgst + sgst + igst;
-    final company = hdr.sName.isNotEmpty
-        ? hdr.sName.toUpperCase()
-        : 'D.L.J.B INDUSTRIES';
+    final company = companyName.isNotEmpty
+        ? companyName.toUpperCase()
+        : (hdr.sName.isNotEmpty ? hdr.sName.toUpperCase() : 'D.L.J.B INDUSTRIES');
 
     return pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
       // Left column: words + bank + terms + common seal
@@ -389,13 +393,13 @@ class InvoicePdf {
           pw.Container(height: 0.5, color: _kBorder),
           // Common seal — tall area for physical stamp
           pw.Padding(
-            padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 pw.Text('(Common Seal)',
-                    style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
-                pw.SizedBox(height: 55),
+                    style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey600)),
+                pw.SizedBox(height: 24),
               ],
             ),
           ),
@@ -420,34 +424,34 @@ class InvoicePdf {
           _sumRow('GST Payable on Reverse charge', _n(hdr.gstRv)),
           pw.Container(height: 0.5, color: _kBorder),
           pw.Padding(
-            padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             child: pw.Text(
               'Certified that the particulars given above are true and correct',
-              style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey600),
+              style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.grey600),
               textAlign: pw.TextAlign.center,
             ),
           ),
           pw.Text('FOR $company',
-              style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: _kBlue),
+              style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: _kBlue),
               textAlign: pw.TextAlign.center),
-          pw.SizedBox(height: 22),
+          pw.SizedBox(height: 10),
           pw.Text('Authorised Signatory',
-              style: const pw.TextStyle(fontSize: 8),
+              style: const pw.TextStyle(fontSize: 7),
               textAlign: pw.TextAlign.center),
-          pw.SizedBox(height: 6),
+          pw.SizedBox(height: 2),
         ]),
       )),
     ]);
   }
 
   static pw.Widget _bottomSection(String title, String content) => pw.Padding(
-        padding: const pw.EdgeInsets.all(7),
+        padding: const pw.EdgeInsets.all(4),
         child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
           pw.Text(title,
-              style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: _kBlue)),
-          pw.SizedBox(height: 3),
+              style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold, color: _kBlue)),
+          pw.SizedBox(height: 2),
           pw.Text(content.isNotEmpty ? content : '',
-              style: const pw.TextStyle(fontSize: 8)),
+              style: const pw.TextStyle(fontSize: 7.5)),
         ]),
       );
 
@@ -455,18 +459,18 @@ class InvoicePdf {
       {bool bold = false, bool highlight = false}) =>
       pw.Container(
         color: highlight ? _kLight : PdfColors.white,
-        padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 1.5),
         child: pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
             pw.Text(label,
                 style: pw.TextStyle(
-                    fontSize: 8,
+                    fontSize: 7.5,
                     fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
                     color: bold ? _kBlue : PdfColors.black)),
             pw.Text(value,
                 style: pw.TextStyle(
-                    fontSize: 8,
+                    fontSize: 7.5,
                     fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal)),
           ],
         ),
@@ -477,9 +481,9 @@ class InvoicePdf {
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
           pw.Text('This is a computer generated invoice.',
-              style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey500)),
-          pw.Text('E & OE',
-              style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey500)),
+              style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.grey500)),
+          pw.Text('E & C',
+              style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.grey500)),
         ],
       );
 
