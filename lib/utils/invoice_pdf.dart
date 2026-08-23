@@ -8,7 +8,7 @@ import '../utils/amount_words.dart';
 
 const _kBlue   = PdfColor.fromInt(0xFF1A3A6B);
 const _kLight  = PdfColor.fromInt(0xFFF0F4FA);
-const _kBorder = PdfColor.fromInt(0xFFBBBBBB);
+const _kBorder = PdfColor.fromInt(0xFF000000);
 const _kAlt    = PdfColor.fromInt(0xFFF7F9FC);
 const _kOrange = PdfColor.fromInt(0xFFD4622A);
 
@@ -18,7 +18,14 @@ class InvoicePdf {
   static Future<pw.Document> build(SalesHdr hdr, List<SalesLn> lines) async {
     final strings = await AppDatabase.getDefaultStrings();
     final companyName = (strings[SettingsDb.keyCoName] ?? '').trim();
-    final doc = pw.Document();
+    final doc = pw.Document(
+      theme: pw.ThemeData.withFont(
+        base: pw.Font.helvetica(),
+        bold: pw.Font.helveticaBold(),
+        italic: pw.Font.helveticaOblique(),
+        boldItalic: pw.Font.helveticaBoldOblique(),
+      ),
+    );
     doc.addPage(pw.Page(
       pageFormat: PdfPageFormat.a4.landscape,
       margin: const pw.EdgeInsets.symmetric(horizontal: 24, vertical: 18),
@@ -114,7 +121,7 @@ class InvoicePdf {
   static pw.Widget _copyBox(String label) => pw.Container(
         width: 190, height: 22,
         decoration: pw.BoxDecoration(
-          border: pw.Border.all(color: _kBorder, width: 0.8),
+          border: pw.Border.all(color: _kBorder, width: 1),
           borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2)),
         ),
         padding: const pw.EdgeInsets.symmetric(horizontal: 6),
@@ -149,15 +156,22 @@ class InvoicePdf {
 
     return pw.Container(
       decoration: pw.BoxDecoration(
-        border: pw.Border.all(color: _kBorder, width: 0.6),
+        border: pw.Border.all(color: _kBorder, width: 1),
         borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
         color: _kLight,
       ),
       child: pw.Row(children: [
         for (int i = 0; i < cells.length; i++) ...[
           pw.Expanded(
-            child: pw.Padding(
+            child: pw.Container(
+              height: 36,
               padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+              decoration: pw.BoxDecoration(
+                border: pw.Border(
+                  right: pw.BorderSide(color: _kBorder, width: 0.9),
+                  bottom: pw.BorderSide(color: _kBorder, width: 0.9),
+                ),
+              ),
               child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
                 pw.Text(cells[i].$1,
                     style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold, color: _kBlue)),
@@ -166,8 +180,6 @@ class InvoicePdf {
               ]),
             ),
           ),
-          if (i < cells.length - 1)
-            pw.Container(width: 0.5, height: 36, color: _kBorder),
         ],
       ]),
     );
@@ -189,7 +201,7 @@ class InvoicePdf {
       String phone, String gstin, String state, String stateCode) =>
       pw.Container(
         decoration: pw.BoxDecoration(
-          border: pw.Border.all(color: _kBorder, width: 0.6),
+          border: pw.Border.all(color: _kBorder, width: 0.8),
           borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
         ),
         child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
@@ -272,6 +284,12 @@ class InvoicePdf {
             width: c.$2, height: 28,
             alignment: pw.Alignment.center,
             padding: const pw.EdgeInsets.symmetric(horizontal: 2),
+            decoration: pw.BoxDecoration(
+              border: pw.Border(
+                right: pw.BorderSide(color: _kBorder, width: 0.9),
+                bottom: pw.BorderSide(color: _kBorder, width: 0.9),
+              ),
+            ),
             child: pw.Text(c.$1,
                 style: pw.TextStyle(fontSize: 6.5, fontWeight: pw.FontWeight.bold,
                     color: PdfColors.white),
@@ -297,7 +315,7 @@ class InvoicePdf {
         decoration: pw.BoxDecoration(
           color: i.isEven ? PdfColors.white : _kAlt,
           border: const pw.Border(
-            bottom: pw.BorderSide(color: _kBorder, width: 0.4),
+            bottom: pw.BorderSide(color: _kBorder, width: 0.9),
           ),
         ),
         child: pw.Row(children: [
@@ -306,6 +324,11 @@ class InvoicePdf {
               width: cols[c].$2, height: 16,
               alignment: cols[c].$3 ? pw.Alignment.centerRight : pw.Alignment.centerLeft,
               padding: const pw.EdgeInsets.symmetric(horizontal: 3),
+              decoration: pw.BoxDecoration(
+                border: pw.Border(
+                  right: pw.BorderSide(color: _kBorder, width: 0.7),
+                ),
+              ),
               child: pw.Text(vals[c], style: const pw.TextStyle(fontSize: 7.5)),
             ),
         ]),
@@ -322,7 +345,7 @@ class InvoicePdf {
       width: totalTableW,
       decoration: const pw.BoxDecoration(
         color: _kLight,
-        border: pw.Border(top: pw.BorderSide(color: _kBlue, width: 1)),
+        border: pw.Border(top: pw.BorderSide(color: _kBlue, width: 1.2)),
       ),
       child: pw.Row(children: [
         // "Total" label spanning first cols
@@ -346,7 +369,7 @@ class InvoicePdf {
 
     return pw.Container(
       decoration: pw.BoxDecoration(
-        border: pw.Border.all(color: _kBorder, width: 0.6),
+        border: pw.Border.all(color: _kBorder, width: 1),
         borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
       ),
       child: pw.ClipRRect(
@@ -381,17 +404,17 @@ class InvoicePdf {
         child: pw.Container(
           height: 168,
           decoration: pw.BoxDecoration(
-            border: pw.Border.all(color: _kBorder, width: 0.6),
+            border: pw.Border.all(color: _kBorder, width: 1),
             borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
           ),
           child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
             _bottomSection('Total Invoice Amount in Words :',
                 AmountWords.convert(grandTotal)),
-            pw.Container(height: 0.5, color: _kBorder),
+            pw.Container(height: 0.8, color: _kBorder),
             _bottomSection('Bank Details :', hdr.bDet),
-            pw.Container(height: 0.5, color: _kBorder),
+            pw.Container(height: 0.8, color: _kBorder),
             _bottomSection('Terms and Conditions :', hdr.termc),
-            pw.Container(height: 0.5, color: _kBorder),
+            pw.Container(height: 0.8, color: _kBorder),
             pw.Expanded(
               child: pw.Padding(
                 padding: const pw.EdgeInsets.fromLTRB(8, 4, 8, 8),
@@ -415,7 +438,7 @@ class InvoicePdf {
         child: pw.Container(
           height: 168,
           decoration: pw.BoxDecoration(
-            border: pw.Border.all(color: _kBorder, width: 0.6),
+            border: pw.Border.all(color: _kBorder, width: 1),
             borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
           ),
           child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.stretch, children: [
@@ -428,12 +451,12 @@ class InvoicePdf {
             pw.Container(height: 1, color: _kBlue),
             _sumRow('Total Amount After Tax',  _n(grandTotal), bold: true, highlight: true),
             _sumRow('GST Payable on Reverse charge', _n(hdr.gstRv)),
-            pw.Container(height: 0.5, color: _kBorder),
+            pw.Container(height: 0.8, color: _kBorder),
             pw.Padding(
               padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
               child: pw.Text(
                 'Certified that the particulars given above are true and correct',
-                style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.grey600),
+                style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.black),
                 textAlign: pw.TextAlign.center,
               ),
             ),
@@ -456,10 +479,10 @@ class InvoicePdf {
         padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 3),
         child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
           pw.Text(title,
-              style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold, color: _kBlue)),
+              style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold, color: PdfColors.black)),
           pw.SizedBox(height: 2),
           pw.Text(content.isNotEmpty ? content : '',
-              style: const pw.TextStyle(fontSize: 7.5)),
+              style: const pw.TextStyle(fontSize: 7.5, color: PdfColors.black)),
         ]),
       );
 
@@ -492,9 +515,9 @@ class InvoicePdf {
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
                 pw.Text('This is a computer generated invoice.',
-                    style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.grey500)),
+                    style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.black)),
                 pw.Text('E & OE',
-                    style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.grey500)),
+                    style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.black)),
               ],
             ),
           ),
