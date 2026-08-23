@@ -4,12 +4,19 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 class SettingsDb {
   static const _table = 'settings';
 
-  static const keyCgstR  = 'cgst_r';
-  static const keySgstR  = 'sgst_r';
-  static const keyIgstR  = 'igst_r';
-  static const keyCessR  = 'cess_r';
+  static const keyCgstR   = 'cgst_r';
+  static const keySgstR   = 'sgst_r';
+  static const keyIgstR   = 'igst_r';
+  static const keyCessR   = 'cess_r';
   static const keyBankDet = 'bank_det';
   static const keyTermsc  = 'termc';
+  // Company / consignee details
+  static const keyCoName  = 'co_name';
+  static const keyCoAdd   = 'co_add';
+  static const keyCoPhone = 'co_phone';
+  static const keyCoGst   = 'co_gst';
+  static const keyCoState = 'co_state';
+  static const keyCoStCd  = 'co_st_cd';
 
   static Future<void> ensureTable(Database db) async {
     await db.execute('''
@@ -19,7 +26,11 @@ class SettingsDb {
       )
     ''');
     // Insert defaults if not present
-    final defaults = {keyCgstR: '9.0', keySgstR: '9.0', keyIgstR: '0.0', keyCessR: '0.0', keyBankDet: '', keyTermsc: ''};
+    final defaults = {
+      keyCgstR: '9.0', keySgstR: '9.0', keyIgstR: '0.0', keyCessR: '0.0',
+      keyBankDet: '', keyTermsc: '',
+      keyCoName: '', keyCoAdd: '', keyCoPhone: '', keyCoGst: '', keyCoState: '', keyCoStCd: '',
+    };
     for (final e in defaults.entries) {
       await db.execute(
         'INSERT OR IGNORE INTO $_table (key, value) VALUES (?, ?)',
@@ -45,6 +56,12 @@ class SettingsDb {
     return {
       keyBankDet: map[keyBankDet] ?? '',
       keyTermsc:  map[keyTermsc]  ?? '',
+      keyCoName:  map[keyCoName]  ?? '',
+      keyCoAdd:   map[keyCoAdd]   ?? '',
+      keyCoPhone: map[keyCoPhone] ?? '',
+      keyCoGst:   map[keyCoGst]   ?? '',
+      keyCoState: map[keyCoState] ?? '',
+      keyCoStCd:  map[keyCoStCd]  ?? '',
     };
   }
 

@@ -9,12 +9,22 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  // Tax rates
   final _cgstR  = TextEditingController();
   final _sgstR  = TextEditingController();
   final _igstR  = TextEditingController();
   final _cessR  = TextEditingController();
+  // Company details
+  final _coName  = TextEditingController();
+  final _coAdd   = TextEditingController();
+  final _coPhone = TextEditingController();
+  final _coGst   = TextEditingController();
+  final _coState = TextEditingController();
+  final _coStCd  = TextEditingController();
+  // Invoice defaults
   final _bankDet = TextEditingController();
   final _termc   = TextEditingController();
+
   bool _loading = true;
   bool _saving  = false;
 
@@ -31,6 +41,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _sgstR.text   = (rates[SettingsDb.keySgstR]  ?? 9.0).toString();
     _igstR.text   = (rates[SettingsDb.keyIgstR]  ?? 0.0).toString();
     _cessR.text   = (rates[SettingsDb.keyCessR]  ?? 0.0).toString();
+    _coName.text  = strings[SettingsDb.keyCoName]  ?? '';
+    _coAdd.text   = strings[SettingsDb.keyCoAdd]   ?? '';
+    _coPhone.text = strings[SettingsDb.keyCoPhone] ?? '';
+    _coGst.text   = strings[SettingsDb.keyCoGst]   ?? '';
+    _coState.text = strings[SettingsDb.keyCoState] ?? '';
+    _coStCd.text  = strings[SettingsDb.keyCoStCd]  ?? '';
     _bankDet.text = strings[SettingsDb.keyBankDet] ?? '';
     _termc.text   = strings[SettingsDb.keyTermsc]  ?? '';
     setState(() => _loading = false);
@@ -42,6 +58,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await AppDatabase.saveRate(SettingsDb.keySgstR, double.tryParse(_sgstR.text) ?? 0);
     await AppDatabase.saveRate(SettingsDb.keyIgstR, double.tryParse(_igstR.text) ?? 0);
     await AppDatabase.saveRate(SettingsDb.keyCessR, double.tryParse(_cessR.text) ?? 0);
+    await AppDatabase.saveSetting(SettingsDb.keyCoName,  _coName.text.trim());
+    await AppDatabase.saveSetting(SettingsDb.keyCoAdd,   _coAdd.text.trim());
+    await AppDatabase.saveSetting(SettingsDb.keyCoPhone, _coPhone.text.trim());
+    await AppDatabase.saveSetting(SettingsDb.keyCoGst,   _coGst.text.trim());
+    await AppDatabase.saveSetting(SettingsDb.keyCoState, _coState.text.trim());
+    await AppDatabase.saveSetting(SettingsDb.keyCoStCd,  _coStCd.text.trim());
     await AppDatabase.saveSetting(SettingsDb.keyBankDet, _bankDet.text.trim());
     await AppDatabase.saveSetting(SettingsDb.keyTermsc,  _termc.text.trim());
     setState(() => _saving = false);
@@ -62,7 +84,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         foregroundColor: Colors.white,
         actions: [
           if (_saving)
-            const Padding(padding: EdgeInsets.all(16), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)))
+            const Padding(padding: EdgeInsets.all(16),
+                child: SizedBox(width: 20, height: 20,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)))
           else
             TextButton(
               onPressed: _save,
@@ -77,6 +101,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // ── Company Details ──────────────────────────────────────
+                  _sectionHeader('Company / Consignee Details'),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Auto-filled as consignee (Shipped to) on every new invoice. Also used as the company header on the printed bill.',
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                  const SizedBox(height: 12),
+                  _field('Company Name', _coName),
+                  _field('Address', _coAdd, maxLines: 2),
+                  Row(children: [
+                    Expanded(child: _field('Phone', _coPhone, keyboardType: TextInputType.phone)),
+                    const SizedBox(width: 12),
+                    Expanded(child: _field('GSTIN', _coGst)),
+                  ]),
+                  Row(children: [
+                    Expanded(child: _field('State', _coState)),
+                    const SizedBox(width: 12),
+                    Expanded(child: _field('State Code', _coStCd)),
+                  ]),
+
+                  const SizedBox(height: 20),
+                  // ── Tax Rates ────────────────────────────────────────────
                   _sectionHeader('Default Tax Rates'),
                   const SizedBox(height: 4),
                   const Text(
@@ -85,32 +132,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(height: 12),
                   Row(children: [
-                    _rateField('CGST %', _cgstR),
+                    Expanded(child: _rateField('CGST %', _cgstR)),
                     const SizedBox(width: 12),
-                    _rateField('SGST %', _sgstR),
+                    Expanded(child: _rateField('SGST %', _sgstR)),
                     const SizedBox(width: 12),
-                    _rateField('IGST %', _igstR),
+                    Expanded(child: _rateField('IGST %', _igstR)),
                     const SizedBox(width: 12),
-                    _rateField('CESS %', _cessR),
+                    Expanded(child: _rateField('CESS %', _cessR)),
                   ]),
+
                   const SizedBox(height: 20),
+                  // ── Bank & Terms ─────────────────────────────────────────
                   _sectionHeader('Bank Details'),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Auto-filled on every new invoice. Editable per invoice if needed.',
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
-                  ),
-                  const SizedBox(height: 12),
-                  _textArea(_bankDet, 5),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 8),
+                  _textArea(_bankDet, 4),
+                  const SizedBox(height: 16),
                   _sectionHeader('Terms & Conditions'),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Auto-filled on every new invoice. Editable per invoice if needed.',
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
-                  ),
-                  const SizedBox(height: 12),
-                  _textArea(_termc, 6),
+                  const SizedBox(height: 8),
+                  _textArea(_termc, 4),
                   const SizedBox(height: 32),
                 ],
               ),
@@ -125,21 +164,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
           color: Color(0xFF2B2B2B),
           borderRadius: BorderRadius.all(Radius.circular(4)),
         ),
-        child: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+        child: Text(title,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
       );
 
-  Widget _rateField(String label, TextEditingController ctrl) => Expanded(
+  Widget _field(String label, TextEditingController ctrl,
+      {int maxLines = 1, TextInputType? keyboardType}) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: 12),
         child: TextField(
           controller: ctrl,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          maxLines: maxLines,
+          keyboardType: keyboardType,
           decoration: InputDecoration(
             labelText: label,
-            suffixText: '%',
-            filled: true,
-            fillColor: Colors.white,
-            border: const OutlineInputBorder(),
-            isDense: true,
+            filled: true, fillColor: Colors.white,
+            border: const OutlineInputBorder(), isDense: true,
           ),
+        ),
+      );
+
+  Widget _rateField(String label, TextEditingController ctrl) => TextField(
+        controller: ctrl,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: InputDecoration(
+          labelText: label, suffixText: '%',
+          filled: true, fillColor: Colors.white,
+          border: const OutlineInputBorder(), isDense: true,
         ),
       );
 
@@ -147,16 +198,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         controller: ctrl,
         maxLines: lines,
         decoration: const InputDecoration(
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(),
-          isDense: true,
+          filled: true, fillColor: Colors.white,
+          border: OutlineInputBorder(), isDense: true,
         ),
       );
 
   @override
   void dispose() {
-    for (final c in [_cgstR, _sgstR, _igstR, _cessR, _bankDet, _termc]) {
+    for (final c in [_cgstR, _sgstR, _igstR, _cessR, _coName, _coAdd,
+        _coPhone, _coGst, _coState, _coStCd, _bankDet, _termc]) {
       c.dispose();
     }
     super.dispose();

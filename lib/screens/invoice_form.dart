@@ -76,8 +76,14 @@ class _InvoiceFormState extends State<InvoiceForm> {
         if (_currentIndex < 0) _currentIndex = 0;
         await _loadRecord(widget.hdrId!);
       } else {
-        _bDet.text  = strings[SettingsDb.keyBankDet] ?? '';
-        _termc.text = strings[SettingsDb.keyTermsc]  ?? '';
+        _bDet.text   = strings[SettingsDb.keyBankDet] ?? '';
+        _termc.text  = strings[SettingsDb.keyTermsc]  ?? '';
+        _sName.text  = strings[SettingsDb.keyCoName]  ?? '';
+        _sAdd.text   = strings[SettingsDb.keyCoAdd]   ?? '';
+        _sPh.text    = strings[SettingsDb.keyCoPhone] ?? '';
+        _sGst.text   = strings[SettingsDb.keyCoGst]   ?? '';
+        _sStat.text  = strings[SettingsDb.keyCoState] ?? '';
+        _ssCd.text   = strings[SettingsDb.keyCoStCd]  ?? '';
         _lines = [_emptyLine(1)];
       }
     } catch (e) {
@@ -195,8 +201,14 @@ class _InvoiceFormState extends State<InvoiceForm> {
   Future<void> _newRecord() async {
     final strings = await AppDatabase.getDefaultStrings();
     _clearForm();
-    _bDet.text  = strings[SettingsDb.keyBankDet] ?? '';
-    _termc.text = strings[SettingsDb.keyTermsc]  ?? '';
+    _bDet.text   = strings[SettingsDb.keyBankDet] ?? '';
+    _termc.text  = strings[SettingsDb.keyTermsc]  ?? '';
+    _sName.text  = strings[SettingsDb.keyCoName]  ?? '';
+    _sAdd.text   = strings[SettingsDb.keyCoAdd]   ?? '';
+    _sPh.text    = strings[SettingsDb.keyCoPhone] ?? '';
+    _sGst.text   = strings[SettingsDb.keyCoGst]   ?? '';
+    _sStat.text  = strings[SettingsDb.keyCoState] ?? '';
+    _ssCd.text   = strings[SettingsDb.keyCoStCd]  ?? '';
     _lines = [_emptyLine(1)];
     setState(() {});
   }

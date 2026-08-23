@@ -64,14 +64,13 @@ class InvoicePdf {
                 margin: const pw.EdgeInsets.symmetric(vertical: 3),
                 color: _kOrange,
               ),
-              if (address.isNotEmpty)
-                pw.Text(address,
-                    style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
-                    textAlign: pw.TextAlign.center),
-              if (phone.isNotEmpty)
-                pw.Text(phone,
-                    style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
-                    textAlign: pw.TextAlign.center),
+              // Address + Phone on ONE line, GSTIN below
+              if (address.isNotEmpty || phone.isNotEmpty)
+                pw.Text(
+                  [if (address.isNotEmpty) address, if (phone.isNotEmpty) phone].join('     '),
+                  style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
+                  textAlign: pw.TextAlign.center,
+                ),
               if (gstin.isNotEmpty)
                 pw.Text(gstin,
                     style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
@@ -236,25 +235,27 @@ class InvoicePdf {
   // ── 4. Items table ────────────────────────────────────────────────────────
   static pw.Widget _table(List<SalesLn> lines) {
     // columns: (header, width, isNumeric)
+    // Total landscape content width = 297mm - 48mm margins = 249mm ≈ 706pt
+    // Distribute all 706pt across 18 columns so nothing overflows
     final cols = [
-      ('Sl\nNo',                    22.0,  false),
-      ('Name of Product\n/ Service',100.0, false),
-      ('HSN\nACS',                  28.0,  false),
-      ('UOM',                       22.0,  false),
-      ('Qty',                       22.0,  true),
-      ('Rate',                      36.0,  true),
-      ('Amount',                    40.0,  true),
-      ('Less\nDisc.',               28.0,  true),
-      ('Taxable\nValue',            38.0,  true),
-      ('CGST\nRate%',               26.0,  true),
-      ('CGST\nAmt',                 30.0,  true),
-      ('SGST\nRate%',               26.0,  true),
-      ('SGST\nAmt',                 30.0,  true),
-      ('IGST\nRate%',               26.0,  true),
-      ('IGST\nAmt',                 30.0,  true),
-      ('CESS\nRate%',               26.0,  true),
-      ('CESS\nAmt',                 28.0,  true),
-      ('Total',                     40.0,  true),
+      ('Sl\nNo',                    24.0,  false),
+      ('Name of Product\n/ Service',118.0, false),
+      ('HSN\nACS',                  32.0,  false),
+      ('UOM',                       24.0,  false),
+      ('Qty',                       24.0,  true),
+      ('Rate',                      40.0,  true),
+      ('Amount',                    44.0,  true),
+      ('Less\nDisc.',               32.0,  true),
+      ('Taxable\nValue',            44.0,  true),
+      ('CGST\nRate%',               30.0,  true),
+      ('CGST\nAmt',                 34.0,  true),
+      ('SGST\nRate%',               30.0,  true),
+      ('SGST\nAmt',                 34.0,  true),
+      ('IGST\nRate%',               30.0,  true),
+      ('IGST\nAmt',                 34.0,  true),
+      ('CESS\nRate%',               30.0,  true),
+      ('CESS\nAmt',                 34.0,  true),
+      ('Total',                     44.0,  true),
     ];
 
     final totalTableW = cols.fold(0.0, (s, c) => s + c.$2);
@@ -386,11 +387,17 @@ class InvoicePdf {
           // Terms
           _bottomSection('Terms and Conditions :', hdr.termc),
           pw.Container(height: 0.5, color: _kBorder),
-          // Common seal
+          // Common seal — tall area for physical stamp
           pw.Padding(
             padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            child: pw.Text('(Common Seal)',
-                style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text('(Common Seal)',
+                    style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+                pw.SizedBox(height: 55),
+              ],
+            ),
           ),
         ]),
       )),
