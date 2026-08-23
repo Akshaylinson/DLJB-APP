@@ -24,3 +24,16 @@ target_link_libraries(${BINARY_NAME} PRIVATE flutter)
 target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::GTK)
 
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
+
+set(APP_ICON_SOURCE "${CMAKE_SOURCE_DIR}/runner/resources/app_icon.png")
+
+add_custom_command(TARGET ${BINARY_NAME} POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${BINARY_NAME}>/resources"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          "${APP_ICON_SOURCE}"
+          "$<TARGET_FILE_DIR:${BINARY_NAME}>/resources/app_icon.png"
+)
+
+install(FILES "${APP_ICON_SOURCE}"
+  DESTINATION "${CMAKE_INSTALL_PREFIX}/resources"
+  COMPONENT Runtime)
