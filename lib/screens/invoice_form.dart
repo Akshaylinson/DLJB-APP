@@ -368,7 +368,7 @@ class _InvoiceFormState extends State<InvoiceForm> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Row(
           children: [
-            const Text(':: DLJB', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+            const Text(':: Invo', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
             const Spacer(),
             IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white, size: 18),

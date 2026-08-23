@@ -41,7 +41,7 @@ class _InvoiceListScreenState extends State<InvoiceListScreen> {
 
   String get _companyName {
     final name = _settings[SettingsDb.keyCoName]?.trim() ?? '';
-    return name.isEmpty ? 'DLJB' : name;
+    return name.isEmpty ? 'Invo' : name;
   }
 
   @override
@@ -210,7 +210,7 @@ class _InvoiceListScreenState extends State<InvoiceListScreen> {
           child: Row(
             children: [
               const Text(
-                ':: DLJB',
+                ':: Invo',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
