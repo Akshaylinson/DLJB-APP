@@ -241,27 +241,26 @@ class InvoicePdf {
   // ── 4. Items table ────────────────────────────────────────────────────────
   static pw.Widget _table(List<SalesLn> lines) {
     // columns: (header, width, isNumeric)
-    // Total landscape content width = 297mm - 48mm margins = 249mm ≈ 706pt
-    // Distribute all 706pt across 18 columns so nothing overflows
+    // Scale the full 18-column grid to use the available landscape width.
     final cols = [
-      ('Sl\nNo',                    24.0,  false),
-      ('Name of Product\n/ Service',118.0, false),
-      ('HSN\nACS',                  32.0,  false),
-      ('UOM',                       24.0,  false),
-      ('Qty',                       26.0,  true),
-      ('Rate',                      42.0,  true),
-      ('Amount',                    46.0,  true),
-      ('Less\nDisc.',               34.0,  true),
-      ('Taxable\nValue',            46.0,  true),
-      ('CGST\nRate%',               31.0,  true),
-      ('CGST\nAmt',                 35.0,  true),
-      ('SGST\nRate%',               31.0,  true),
-      ('SGST\nAmt',                 35.0,  true),
-      ('IGST\nRate%',               31.0,  true),
-      ('IGST\nAmt',                 35.0,  true),
-      ('CESS\nRate%',               31.0,  true),
-      ('CESS\nAmt',                 35.0,  true),
-      ('Total',                     50.0,  true),
+      ('Sl\nNo',                    26.9,  false),
+      ('Name of Product\n/ Service',132.2, false),
+      ('HSN\nACS',                  35.8,  false),
+      ('UOM',                       26.9,  false),
+      ('Qty',                       29.1,  true),
+      ('Rate',                      47.0,  true),
+      ('Amount',                    51.5,  true),
+      ('Less\nDisc.',               38.1,  true),
+      ('Taxable\nValue',            51.5,  true),
+      ('CGST\nRate%',               34.7,  true),
+      ('CGST\nAmt',                 39.2,  true),
+      ('SGST\nRate%',               34.7,  true),
+      ('SGST\nAmt',                 39.2,  true),
+      ('IGST\nRate%',               34.7,  true),
+      ('IGST\nAmt',                 39.2,  true),
+      ('CESS\nRate%',               34.7,  true),
+      ('CESS\nAmt',                 39.2,  true),
+      ('Total',                     56.0,  true),
     ];
 
     final totalTableW = cols.fold(0.0, (s, c) => s + c.$2);
